@@ -5,7 +5,7 @@ import { Edit, ImageIcon, ImagePlus, Plus, Save, Trash2, X } from "lucide-react"
 import { useRouter } from "next/navigation";
 import { AdminModal, ConfirmModal } from "@/components/admin/modal";
 import { inputClass, labelClass, slugify } from "@/components/admin/form-fields";
-import { uploadPortfolioImage } from "@/components/admin/upload";
+import { isSupportedPortfolioImage, unsupportedImageMessage, uploadPortfolioImage } from "@/components/admin/upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Category, Work } from "@/lib/types";
 
@@ -77,10 +77,28 @@ export function WorksManager({ initialWorks, categories }: WorksManagerProps) {
     return "Could not save work. Please check the form and try again.";
   }
 
-  function addPendingGalleryFiles(files: FileList | null) {
+  function validateThumbnailInput(file: File | null, input: HTMLInputElement) {
+    if (!file?.size) return;
+
+    if (!isSupportedPortfolioImage(file)) {
+      setStatus(unsupportedImageMessage);
+      input.value = "";
+    }
+  }
+
+  function addPendingGalleryFiles(files: FileList | null, input: HTMLInputElement) {
     if (!files?.length) return;
 
-    const previews = Array.from(files).map((file) => ({
+    const selectedFiles = Array.from(files);
+    const hasUnsupportedFile = selectedFiles.some((file) => !isSupportedPortfolioImage(file));
+
+    if (hasUnsupportedFile) {
+      setStatus(unsupportedImageMessage);
+      input.value = "";
+      return;
+    }
+
+    const previews = selectedFiles.map((file) => ({
       file,
       previewUrl: URL.createObjectURL(file)
     }));
@@ -325,7 +343,13 @@ export function WorksManager({ initialWorks, categories }: WorksManagerProps) {
               </label>
               <label className={labelClass}>
                 <span>Thumbnail upload</span>
-                <input className={inputClass} name="thumbnail" type="file" accept="image/*" />
+                <input
+                  className={inputClass}
+                  name="thumbnail"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => validateThumbnailInput(event.currentTarget.files?.[0] ?? null, event.currentTarget)}
+                />
               </label>
               <label className={labelClass}>
                 <span>Client name</span>
@@ -338,7 +362,13 @@ export function WorksManager({ initialWorks, categories }: WorksManagerProps) {
               <div className="space-y-3 md:col-span-2">
                 <label className={labelClass}>
                   <span>Gallery images</span>
-                  <input className={inputClass} type="file" accept="image/*" multiple onChange={(event) => addPendingGalleryFiles(event.target.files)} />
+                  <input
+                    className={inputClass}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={(event) => addPendingGalleryFiles(event.currentTarget.files, event.currentTarget)}
+                  />
                 </label>
                 {(editingWork.gallery_images?.length || pendingGalleryFiles.length) ? (
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

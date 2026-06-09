@@ -5,7 +5,7 @@ import { Edit, ImageIcon, Plus, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AdminModal, ConfirmModal } from "@/components/admin/modal";
 import { inputClass, labelClass, slugify } from "@/components/admin/form-fields";
-import { uploadPortfolioImage } from "@/components/admin/upload";
+import { isSupportedPortfolioImage, unsupportedImageMessage, uploadPortfolioImage } from "@/components/admin/upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types";
 
@@ -47,6 +47,15 @@ export function CategoryManager({ initialCategories }: { initialCategories: Cate
 
   function closeModal() {
     if (!saving) setEditingCategory(null);
+  }
+
+  function validateThumbnailInput(file: File | null, input: HTMLInputElement) {
+    if (!file?.size) return;
+
+    if (!isSupportedPortfolioImage(file)) {
+      setStatus(unsupportedImageMessage);
+      input.value = "";
+    }
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -206,7 +215,13 @@ export function CategoryManager({ initialCategories }: { initialCategories: Cate
               </label>
               <label className={labelClass}>
                 <span>Thumbnail upload</span>
-                <input className={inputClass} name="thumbnail" type="file" accept="image/*" />
+                <input
+                  className={inputClass}
+                  name="thumbnail"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => validateThumbnailInput(event.currentTarget.files?.[0] ?? null, event.currentTarget)}
+                />
               </label>
               <label className={labelClass}>
                 <span>Display order</span>

@@ -63,4 +63,5 @@ Then open `http://localhost:3000`.
 - Public pages fetch active categories, published works, and website info from Supabase.
 - Contact form submissions insert into `contact_messages`.
 - Admin image uploads save public URLs from the `portfolio-media` bucket.
+- Existing HEIC files already uploaded to Supabase must be converted to JPG/PNG/WEBP and re-uploaded.
 - This is intentionally MVP-focused: no blog, testimonials, payment flow, animation library, or project detail pages.
