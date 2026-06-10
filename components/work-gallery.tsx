@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Category, Work } from "@/lib/types";
 import { ImageCard } from "@/components/image-card";
@@ -8,42 +7,32 @@ import { ImageCard } from "@/components/image-card";
 type WorkGalleryProps = {
   categories: Category[];
   works: Work[];
-  initialCategory?: string;
+  selectedCategory?: string;
 };
 
-export function WorkGallery({ categories, works, initialCategory = "all" }: WorkGalleryProps) {
-  const validInitial = categories.some((category) => category.slug === initialCategory) ? initialCategory : "all";
-  const [activeCategory, setActiveCategory] = useState(validInitial);
+export function WorkGallery({ categories, works, selectedCategory }: WorkGalleryProps) {
+  const filteredWorks = selectedCategory ? works.filter((work) => work.categories?.slug === selectedCategory) : [];
 
-  const filteredWorks = useMemo(() => {
-    if (activeCategory === "all") return works;
-    return works.filter((work) => work.categories?.slug === activeCategory);
-  }, [activeCategory, works]);
+  if (categories.length === 0) {
+    return <div className="rounded-lg border border-dashed border-ink/20 bg-white/50 p-10 text-center text-ink/60">No categories added yet.</div>;
+  }
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap gap-2">
-        <button
-          className={`focus-ring rounded-full px-4 py-2 text-sm font-semibold transition ${activeCategory === "all" ? "bg-ink text-white" : "bg-white/70 text-ink/70 hover:text-ink"}`}
-          onClick={() => setActiveCategory("all")}
-          type="button"
-        >
-          All
-        </button>
         {categories.map((category) => (
-          <button
+          <Link
             key={category.id}
-            className={`focus-ring rounded-full px-4 py-2 text-sm font-semibold transition ${activeCategory === category.slug ? "bg-ink text-white" : "bg-white/70 text-ink/70 hover:text-ink"}`}
-            onClick={() => setActiveCategory(category.slug)}
-            type="button"
+            className={`focus-ring rounded-full px-4 py-2 text-sm font-semibold transition ${selectedCategory === category.slug ? "bg-ink text-white" : "bg-white/70 text-ink/70 hover:text-ink"}`}
+            href={`/work?category=${category.slug}`}
           >
             {category.title}
-          </button>
+          </Link>
         ))}
       </div>
 
       {filteredWorks.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-ink/20 bg-white/50 p-10 text-center text-ink/60">No work added yet.</div>
+        <div className="rounded-lg border border-dashed border-ink/20 bg-white/50 p-10 text-center text-ink/60">No projects added in this category yet.</div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filteredWorks.map((work) => (
